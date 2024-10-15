@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.core
 
+import io.github.vinceglb.filekit.core.FileKit.topMostViewController
 import io.github.vinceglb.filekit.core.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.core.util.PhPickerDelegate
 import io.github.vinceglb.filekit.core.util.PhPickerDismissDelegate
@@ -21,10 +22,14 @@ import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerViewController
+import platform.UIKit.UINavigationController
 import platform.UIKit.UISceneActivationStateForegroundActive
+import platform.UIKit.UITabBarController
+import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
 import platform.UIKit.presentationController
+import platform.UIKit.tabBarController
 import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
 import platform.UniformTypeIdentifiers.UTTypeFolder
@@ -124,7 +129,7 @@ public actual object FileKit {
             pickerController.delegate = documentPickerDelegate
 
             // Present the picker controller
-            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+            UIApplication.sharedApplication.firstKeyWindow?.topMostViewController?.presentViewController(
                 pickerController,
                 animated = true,
                 completion = null
@@ -161,7 +166,7 @@ public actual object FileKit {
             pickerController.delegate = documentPickerDelegate
 
             // Present the picker controller
-            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+            UIApplication.sharedApplication.firstKeyWindow?.topMostViewController?.presentViewController(
                 pickerController,
                 animated = true,
                 completion = null
@@ -212,7 +217,7 @@ public actual object FileKit {
             controller.presentationController?.delegate = phPickerDismissDelegate
 
             // Present the picker controller
-            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+            UIApplication.sharedApplication.firstKeyWindow?.topMostViewController?.presentViewController(
                 controller,
                 animated = true,
                 completion = null
@@ -259,6 +264,25 @@ public actual object FileKit {
             }.takeIf { it.isNotEmpty() }
         }
     }
+
+    private val UIViewController.topMostViewController: UIViewController?
+        get() {
+            (this as? UINavigationController)?.let { navigationController ->
+                return navigationController.topViewController
+            }
+            (this as? UITabBarController)?.let { tabBarController ->
+                (tabBarController.selectedViewController)?.let { selected ->
+                    return selected.topMostViewController
+                }
+            }
+            (this.presentedViewController)?.let { presented ->
+                return presented.topMostViewController
+            }
+            return this
+        }
+
+    private val UIWindow.topMostViewController: UIViewController?
+        get() = this.rootViewController?.topMostViewController
 
     // How to get Root view controller in Swift
     // https://sarunw.com/posts/how-to-get-root-view-controller/
